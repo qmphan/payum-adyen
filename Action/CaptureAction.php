@@ -7,6 +7,7 @@ use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Exception\UnsupportedApiException;
+use Payum\Core\Reply\HttpResponse;
 use Payum\Core\Reply\HttpPostRedirect;
 use Payum\Core\Request\Capture;
 use Payum\Core\Request\GetHttpRequest;
@@ -64,8 +65,6 @@ class CaptureAction extends GatewayAwareAction implements ApiAwareInterface, Gen
 
         $model = ArrayObject::ensureArrayObject($request->getModel());
 
-        $this->gateway->execute($httpRequest = new GetHttpRequest());
-
         // Check httpRequest
         $extraData = $model['extraData'] ? json_decode($model['extraData'], true) : [];
 
@@ -81,13 +80,10 @@ class CaptureAction extends GatewayAwareAction implements ApiAwareInterface, Gen
             $extraData['notify_token'] = $notifyToken->getHash();
             $model['resURL'] = $notifyToken->getTargetUrl();
         }
-
         $model['extraData'] = json_encode($extraData);
 
-        throw new HttpPostRedirect(
-            $this->api->getApiEndpoint(),
-            $this->api->prepareFields($model->toUnsafeArray())
-        );
+        $reply_content = $this->api->doCapturePayment($model);
+		throw new HttpResponse($reply_content, 200);
     }
 
     /**

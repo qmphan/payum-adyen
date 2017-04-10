@@ -34,7 +34,8 @@ class AdyenGatewayFactory extends GatewayFactory
             $config['payum.default_options'] = [
                 'skinCode' => '',
                 'merchantAccount' => '',
-                'hmacKey' => '',
+				'username' => '',
+                'password' => '',
                 'sandbox' => true,
                 'notification_method' => 'basic',
                 'default_payment_fields' => [],
@@ -43,7 +44,8 @@ class AdyenGatewayFactory extends GatewayFactory
             $config['payum.required_options'] = [
                 'skinCode',
                 'merchantAccount',
-                'hmacKey',
+                'username',
+				'password'
             ];
 
             $config['payum.api'] = function (ArrayObject $config) {
@@ -53,7 +55,8 @@ class AdyenGatewayFactory extends GatewayFactory
                     [
                         'skinCode' => $config['skinCode'],
                         'merchantAccount' => $config['merchantAccount'],
-                        'hmacKey' => $config['hmacKey'],
+                        'username' => $config['username'],
+						'password' => $config['password'],
                         'sandbox' => $config['sandbox'],
                         'notification_method' => $config['notification_method'],
                         'default_payment_fields' => $config['default_payment_fields'],
