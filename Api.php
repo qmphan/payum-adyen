@@ -166,17 +166,38 @@ class Api
 	public function doCapturePayment($model) {                                           
         $amount = array("value" => $model['paymentAmount'],                              
                         "currency" => $model['currencyCode']                             
-                    );                                                                   
-        $additional_data = array("card.encrypted.json" => $model['card.encrypted.json']);
-        $params = array("amount" => $amount,                                             
+                    );
+		$card_data = $model['card.encrypted.json'];
+		$save_card = false;
+
+		$params = array("amount" => $amount,                                             
                         "reference"=> $model['merchantReference'],                       
                         "merchantAccount"=> $this->options['merchantAccount'],           
-                        "additionalData" => $additional_data                             
-                        );                                                               
-                                                                                         
+                        );
+
+		if ($card_data) {
+        	$additional_data = array("card.encrypted.json" => $model['card.encrypted.json']);
+			$save_card= $model['save_card'];
+            $params["additionalData"] = $additional_data;
+			if ($save_card) {
+				$params["recurring"] = array("contract" => Adyen\Contract::ONECLICK_RECURRING);
+			}
+		}
+		else {
+			$recurringContract = $model['adyen_recurring_contract'];
+			if ($recurringContract) {
+				$params["recurring"] = array("contract" => Adyen\Contract::RECURRING);
+				$params["selectedRecurringDetailReference"] = $recurringContract->getRecurringDetailRef();
+				$params["shopperInteraction"] = "ContAuth";
+			}
+			else {
+				throw new \Error("No card data and no recurring contract found");
+			}
+		}
+
         $result = $this->service->authorise($params);
 		if ($result['resultCode'] == 'Authorised') {
-			$model['authResult'] = 'AUTHORISED';
+			$model['authResult'] = 'CAPTURE';
 			$model['authCode'] = $result['authCode'];
 			$model['pspReference'] = $result['pspReference'];
 			$additionalData = $result['additionalData'];
