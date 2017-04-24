@@ -128,7 +128,6 @@ class Api
 		else {
 			$this->client->setEnvironment(\Adyen\Environment::LIVE);
 		}
-		$this->service = new \Adyen\Service\Payment($this->client);
     }
 
     /**
@@ -163,7 +162,7 @@ class Api
 	    return $params;
 	}
 
-	public function doCapturePayment($model) {                                           
+	public function doCapturePayment($model) {
         $amount = array("value" => $model['paymentAmount'],                              
                         "currency" => $model['currencyCode']                             
                     );
@@ -172,7 +171,9 @@ class Api
 
 		$params = array("amount" => $amount,                                             
                         "reference"=> $model['merchantReference'],                       
-                        "merchantAccount"=> $this->options['merchantAccount'],           
+                        "merchantAccount"=> $this->options['merchantAccount'],
+						"shopperEmail" => $model["shopperEmail"],
+						"shopperReference" => $model["shopperReference"]
                         );
 
 		if ($card_data) {
@@ -180,29 +181,43 @@ class Api
 			$save_card= $model['save_card'];
             $params["additionalData"] = $additional_data;
 			if ($save_card) {
-				$params["recurring"] = array("contract" => Adyen\Contract::ONECLICK_RECURRING);
+				$params["recurring"] = array("contract" => \Adyen\Contract::ONECLICK_RECURRING);
 			}
 		}
 		else {
-			$recurringContract = $model['adyen_recurring_contract'];
-			if ($recurringContract) {
-				$params["recurring"] = array("contract" => Adyen\Contract::RECURRING);
-				$params["selectedRecurringDetailReference"] = $recurringContract->getRecurringDetailRef();
+			$recurring_detail_ref = $model['card.recurring_detail_ref'];
+			if ($recurring_detail_ref) {
+				$params["recurring"] = array("contract" => \Adyen\Contract::RECURRING);
+				$params["selectedRecurringDetailReference"] = $recurring_detail_ref;
 				$params["shopperInteraction"] = "ContAuth";
 			}
 			else {
 				throw new \Error("No card data and no recurring contract found");
 			}
 		}
-
-        $result = $this->service->authorise($params);
+		
+		$payment_service = new \Adyen\Service\Payment($this->client);
+        $result = $payment_service->authorise($params);
 		if ($result['resultCode'] == 'Authorised') {
 			$model['authResult'] = 'CAPTURE';
 			$model['authCode'] = $result['authCode'];
 			$model['pspReference'] = $result['pspReference'];
 			$additionalData = $result['additionalData'];
-			$model['additionalData'] = array('aliasType' => $additionalData['aliasType'], 'alias' => $additionalData['alias'], 'paymentMethod' => $additionalData['paymentMethod']);
+			$model['additionalData'] = array('aliasType' => $additionalData['aliasType'], 'alias' => $additionalData['alias']);
 		}
         return $result;
     }
+
+	public function listRecurringContract($model) {
+		$params = array(
+                        "merchantAccount"=> $this->options['merchantAccount'],
+						"recurring" => array("contract" => \Adyen\Contract::RECURRING),
+						"shopperReference" => $model["shopperReference"]
+                        );
+
+		$recurring_service = new \Adyen\Service\Recurring($this->client);
+        $result = $recurring_service->listRecurringDetails($params);
+		return $result['details'];
+    }
+
 }

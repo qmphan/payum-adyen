@@ -8,6 +8,8 @@ use Payum\Adyen\Action\CaptureAction;
 use Payum\Adyen\Action\NotifyAction;
 use Payum\Adyen\Action\RefundAction;
 use Payum\Adyen\Action\StatusAction;
+use Payum\Adyen\Action\ListRecurringContractAction;
+
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\GatewayFactory;
 
@@ -28,6 +30,7 @@ class AdyenGatewayFactory extends GatewayFactory
             'payum.action.notify' => new NotifyAction(),
             'payum.action.convert_payment' => new ConvertPaymentAction(),
             'payum.action.status' => new StatusAction(),
+			'payum.action.list_recurring_contract' => new ListRecurringContractAction(),
         ]);
 
         if (false == $config['payum.api']) {
