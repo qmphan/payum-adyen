@@ -202,8 +202,10 @@ class Api
 			$model['authResult'] = 'CAPTURE';
 			$model['authCode'] = $result['authCode'];
 			$model['pspReference'] = $result['pspReference'];
-			$additionalData = $result['additionalData'];
-			$model['additionalData'] = array('aliasType' => $additionalData['aliasType'], 'alias' => $additionalData['alias']);
+			if (isset($result['additionalData'])) {
+				$additionalData = $result['additionalData'];
+				$model['additionalData'] = array('aliasType' => $additionalData['aliasType'], 'alias' => $additionalData['alias']);
+			}
 		}
         return $result;
     }
