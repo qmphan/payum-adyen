@@ -168,6 +168,7 @@ class Api
                     );
 		$card_data = $model['card.encrypted.json'];
 		$save_card = false;
+		$sepa_iban = $model['sepa.iban'];
 
 		$params = array("amount" => $amount,                                             
                         "reference"=> $model['merchantReference'],                       
@@ -183,6 +184,14 @@ class Api
 			if ($save_card) {
 				$params["recurring"] = array("contract" => \Adyen\Contract::ONECLICK_RECURRING);
 			}
+		}
+		elseif ($sepa_iban) {
+			$params['bankAccount'] = array(
+				'iban' => $model['sepa.iban'],
+				'ownerName' => $model['sepa.ownerName'],
+				'countryCode' => $model['sepa.countryCode']
+			);
+			$params['selectedBrand'] = "sepadirectdebit";
 		}
 		else {
 			$recurring_detail_ref = $model['card.recurring_detail_ref'];
